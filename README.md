@@ -65,9 +65,23 @@ xhs-producer/
 
 ## 依赖
 
+### 运行环境
+
 - **Python 3** + `playwright`（`pip3 install playwright && python3 -m playwright install chromium`）
 - **lark-cli**（飞书文档交付，可选）
-- **相关 Skill**：`huashu-design`、`popular-web-designs`、`feishu-doc-writer`
+
+### 关联 Skill（推荐安装）
+
+`xhs-producer` 会在运行时引用以下 skill，请确保它们已安装到 `~/shared-skills/`：
+
+| Skill | 关系 | 安装 |
+|-------|------|------|
+| `popular-web-designs` | **强依赖** — 54 个品牌设计系统，话题匹配品牌时自动读取 | `git clone https://github.com/anthropics/courses ~/shared-skills/popular-web-designs`* |
+| `huashu-design` | 推荐 — HTML 视觉设计通用规范，风格探索模式使用 | 已在 `~/shared-skills/` 中 |
+| `stitch-ui-design-spec-generator` | 推荐 — 领域→风格自动映射逻辑 | 已在 `~/shared-skills/` 中 |
+| `feishu-doc-writer` | 可选 — 飞书 Docx Block API 细节文档 | 已在 `~/shared-skills/` 中 |
+
+> *注：`popular-web-designs` 是 Hermes 社区 skill，如果你的 `~/shared-skills/` 已有该目录则无需重复安装。
 
 ## 注意事项
 
