@@ -128,6 +128,8 @@ READ ~/shared-skills/popular-web-designs/templates/<brand>.md
 
 可用品牌（54个）：nvidia · apple · notion · linear · stripe · vercel · spotify · cursor · elevenlabs · mistral · claude · figma · framer · raycast · warp · x.ai · spacex · revolut · wise · coinbase · ...
 
+> 💡 `popular-web-designs` 是 Hermes 社区 skill，安装方式见 README.md。若未安装，跳过 Level 1 直接走 Level 2 领域映射。
+
 示例：话题是「NVIDIA / 黄仁勋」→ 加载 `nvidia.md`：
 - bg: `#000000`，accent: `#76b900`，字体: Inter，圆角: 1-2px（极小，工程感）
 - 装饰元素: 绿色细线边框，非大面积填充

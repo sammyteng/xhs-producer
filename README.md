@@ -63,25 +63,56 @@ xhs-producer/
 2. **领域映射**：按内容领域（科技/产品/管理/成长/财经/消费/健康/游戏）自动选配色方案
 3. **探索模式**：用户需求模糊时，出 3 个方向的封面样品供选择
 
+## 安装
+
+### 一行命令安装
+
+```bash
+git clone https://github.com/sammyteng/xhs-producer.git ~/shared-skills/xhs-producer
+```
+
+然后运行检查脚本，确认依赖环境：
+
+```bash
+bash ~/shared-skills/xhs-producer/setup.sh
+```
+
+### 触发方式
+
+安装后，在 Claude Code / Codex / Gemini CLI / Antigravity 中直接说：
+
+- 「帮我做一套小红书图文」
+- 「把这篇内容做成小红书」
+- `/xhs-producer [话题]`
+
+---
+
 ## 依赖
 
-### 运行环境
+### 运行环境（必须）
 
-- **Python 3** + `playwright`（`pip3 install playwright && python3 -m playwright install chromium`）
-- **lark-cli**（飞书文档交付，可选）
+```bash
+pip3 install playwright
+python3 -m playwright install chromium
+```
 
-### 关联 Skill（推荐安装）
+### 关联 Skill
 
-`xhs-producer` 会在运行时引用以下 skill，请确保它们已安装到 `~/shared-skills/`：
-
-| Skill | 关系 | 安装 |
+| Skill | 关系 | 说明 |
 |-------|------|------|
-| `popular-web-designs` | **强依赖** — 54 个品牌设计系统，话题匹配品牌时自动读取 | `git clone https://github.com/anthropics/courses ~/shared-skills/popular-web-designs`* |
-| `huashu-design` | 推荐 — HTML 视觉设计通用规范，风格探索模式使用 | 已在 `~/shared-skills/` 中 |
-| `stitch-ui-design-spec-generator` | 推荐 — 领域→风格自动映射逻辑 | 已在 `~/shared-skills/` 中 |
-| `feishu-doc-writer` | 可选 — 飞书 Docx Block API 细节文档 | 已在 `~/shared-skills/` 中 |
+| `popular-web-designs` | **推荐** | 54 个品牌设计系统（NVIDIA/Apple/Notion...），话题匹配品牌时自动读取。未安装时自动降级到 Level 2 领域映射，不影响核心功能 |
+| `huashu-design` | 可选 | HTML 视觉设计通用规范，设计逻辑已内置于 SKILL.md |
+| `feishu-doc-writer` | 可选 | 飞书 Docx Block API 细节，lark-cli 不可用时参考 |
 
-> *注：`popular-web-designs` 是 Hermes 社区 skill，如果你的 `~/shared-skills/` 已有该目录则无需重复安装。
+> `popular-web-designs` 是 Hermes 社区 skill，**不是本仓库的一部分**。如果你的 `~/shared-skills/` 已有该目录（Hermes 套件用户）则无需额外操作。
+
+### lark-cli（飞书交付，可选）
+
+```bash
+npm install -g @anthropic-ai/lark-cli
+```
+
+---
 
 ## 注意事项
 
