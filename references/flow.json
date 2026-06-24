@@ -1,0 +1,46 @@
+{
+  "skill": "xhs-producer",
+  "title": "小红书图文一键生产流程",
+  "nodes": [
+    {
+      "title": "给来源",
+      "subtitle": "笔记/URL/话题/正文任选其一",
+      "type": "io"
+    },
+    {
+      "title": "提炼规划",
+      "subtitle": "抓核心观点+定6-9张卡片结构",
+      "type": "code"
+    },
+    {
+      "title": "定风格",
+      "subtitle": "复用品牌库/领域映射选配色",
+      "type": "reuse"
+    },
+    {
+      "title": "生成卡片",
+      "subtitle": "写HTML 1080×1350竖版多图",
+      "type": "code"
+    },
+    {
+      "title": "截图成图",
+      "subtitle": "Playwright逐张导出PNG",
+      "type": "reuse"
+    },
+    {
+      "title": "质检图片",
+      "subtitle": "读首末图查截断/色彩/边界",
+      "type": "gate"
+    },
+    {
+      "title": "写文案",
+      "subtitle": "标题+鱼骨正文+话题标签",
+      "type": "code"
+    },
+    {
+      "title": "飞书交付",
+      "subtitle": "建文档插图+文案返回URL",
+      "type": "io"
+    }
+  ]
+}

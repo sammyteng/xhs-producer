@@ -453,7 +453,7 @@ python3 /tmp/xhs-${SLUG}/screenshot.py
 
 **3.3 截图质量检查**
 
-> 用 `vision_analyze` 验证首末两张截图。注意：部分模型（如 deepseek）不支持 vision，此时可跳过视觉验证，通过 Playwright 的卡片探测数量（应等于预期张数）间接验证 DOM 完整性。
+> 用 `vision_analyze` 验证首末两张截图。注意：部分模型（如 deepseek）不支持 vision，此时可跳过视觉验证，通过 Playwright 的卡片探测数量（应等于预期张数）和文件大小验证 DOM 完整性。
 
 截图完成后，用 Read 工具读取 card1.png 和最后一张（cardN.png）验证：
 - 文字是否完整显示（无截断）
@@ -461,7 +461,15 @@ python3 /tmp/xhs-${SLUG}/screenshot.py
 - 内容是否超出边界
 - 底部导航是否清晰
 
-如发现问题，修改 HTML → 重新截图，直到质量达标。
+如发现问题，修改 HTML → 重新截图。
+
+> ⚠️ **DeepSeek 模型限制**：DeepSeek 不支持 vision/图片分析。使用该模型时，跳过 `vision_analyze` 验证，依赖 Playwright DOM 探测 + 文件大小检查作为替代验证手段。
+>
+> **DeepSeek 文件大小验证命令**：
+> ```bash
+> ls -lh /tmp/xhs-${SLUG}/card*.png | awk '{print $5, $NF}'
+> ```
+> 健康范围：纯文本卡片 60-90KB，含渐变/光晕的卡片 140-200KB。全部文件 ≥50KB 且无 0B 文件即为通过。
 
 ---
 
@@ -475,18 +483,37 @@ python3 /tmp/xhs-${SLUG}/screenshot.py
 
 标题是第一道门槛，前 10 个字决定点击率。规则：
 
+**硬规则**：默认标题控制在 **20 字以内**。标题必须先让人看懂「谁的痛点 / 什么冲突 / 为什么和我有关」，不要写成工具发布说明。
+
+自检标准：
+
+- 有重点：能看出本文核心对象或场景，而不是泛泛说“深度解析”。
+- 有冲突：包含痛点、反差、误解、成本、失败、终于解决等张力。
+- 有人味：像一个真实用户/打工人/创始人的感受，不像 PR 稿或论文标题。
+- 不绕弯：不要用“全面解读、深度解析、重磅升级、效率革命”这类空话。
+
+优先标题模板：
+
+| 模板 | 示例 | 适用场景 |
+|-----|------|---------|
+| 工具 + 戳中痛点 | 「Claude Code戳中打工人痛点」 | AI 工具/产品更新 |
+| 旧流程 + 新结果 | 「AI干完活，我还在写汇报」 | 工作流/效率 |
+| 人群 + 别再低效做法 | 「产品经理别再手搓周报了」 | 职场/工具 |
+| 终于 + 具体变化 | 「终端成果终于能给人看了」 | 技术能力可视化 |
+| 不是 X，而是 Y | 「不是更强，是更好交付了」 | 反常识判断 |
+
 | 公式 | 示例 | 适用场景 |
 |-----|------|---------|
 | 数字 + 颠覆认知 | 「3个观点彻底颠覆我对NVIDIA的认知」 | 知识/科技 |
 | 痛点 + 解决方案 | 「一直搞不懂AI护城河？看这一篇就够了」 | 教程/工具 |
 | 身份共鸣 + 事件 | 「做销售运营3年，这本书改变了我的打法」 | 职场/成长 |
 | 名人/品牌 + 反常细节 | 「黄仁勋这个管理方式让我觉得他很不一样」 | 人物/品牌 |
-| 时间 + 结果 + 经验 | 「花2.5小时听完这个访谈，整理了5个核心洞察」 | 内容精华 |
+| 时间 + 结果 + 经验 | 「花2.5小时，整理了5个真判断」 | 内容精华 |
 | 悬念 + 结论 | 「大家都说买GPU，但NVIDIA真正卖的不是这个」 | 反常识 |
 
-**加分项**：标题带数字（+34% 点击）、带 emoji 符号（🔥❗㊙）、总长 15-25 字最优。
+**加分项**：标题带具体人群、真实痛点、反常识转折；总长 12-20 字最优。
 
-**禁忌**：纯描述性标题（「关于XXX的分享」）、超过 30 字、无悬念感。
+**禁忌**：纯描述性标题（「关于XXX的分享」）、默认超过 20 字、无冲突、像官方公告。
 
 ---
 
@@ -587,7 +614,7 @@ python3 /tmp/xhs-${SLUG}/screenshot.py
 
 ```bash
 cat > /tmp/xhs-${SLUG}/文案.md << 'EOF'
-# [标题]（≤25字，含emoji）
+# [标题]（≤20字，有重点、有冲突、有人味）
 
 > 配图：card1.png ~ cardN.png（共N张）| 目标字数：800-1200字
 
@@ -613,16 +640,46 @@ EOF
 
 **5.1 创建文档（一步搞定）**
 
+> ⚠️ **JSON 解析陷阱**：`lark-cli` stdout 可能夹杂 warning/deprecated 行（如 `[lark-cli] [WARN] proxy detected`），`python3 -c "json.load(sys.stdin)"` 会失败。详见 `feishu-lark-cli-workflows` Skill 的 Workflow 5 附节。
+
 ```bash
+# 方法一：手动提取（推荐，最快）
 RESULT=$(lark-cli docs +create \
   --title "小红书 | ${TOPIC} | $(date +%Y-%m-%d)" \
   --markdown "由 Hermes Agent 创建 | 来源页头文字" \
-  --as bot)
-DOC_ID=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['doc_id'])")
-DOC_URL=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['doc_url'])")
-# 失败检查
-if [ -z "$DOC_ID" ]; then echo "创建失败: $RESULT"; exit 1; fi
-echo "文档创建成功: $DOC_URL"
+  --as bot 2>&1)
+echo "$RESULT"
+# 从输出中直接读取 doc_id 和 doc_url，手动赋值：
+# DOC_ID="XpPPd..."
+# DOC_URL="https://www.feishu.cn/docx/..."
+
+# 方法二：brace-matching 解析（稳健）
+DOC_ID=$(echo "$RESULT" | python3 -c "
+import sys, json
+raw = sys.stdin.read()
+start = raw.find('{\"ok\"')
+if start < 0: sys.exit(1)
+depth = 0; end = start
+for i, ch in enumerate(raw[start:], start):
+    if ch == '{': depth += 1
+    elif ch == '}':
+        depth -= 1
+        if depth == 0: end = i + 1; break
+print(json.loads(raw[start:end])['data']['doc_id'])
+")
+DOC_URL=$(echo "$RESULT" | python3 -c "
+import sys, json
+raw = sys.stdin.read()
+start = raw.find('{\"ok\"')
+if start < 0: sys.exit(1)
+depth = 0; end = start
+for i, ch in enumerate(raw[start:], start):
+    if ch == '{': depth += 1
+    elif ch == '}':
+        depth -= 1
+        if depth == 0: end = i + 1; break
+print(json.loads(raw[start:end])['data']['doc_url'])
+")
 ```
 
 **5.2 逐张插入图片（⚠️ 必须用相对路径）**
@@ -695,7 +752,14 @@ echo "本地文件：/tmp/xhs-${SLUG}/"
 
 ---
 
-## 错误处理
+## ⚠️ 平台审查差异（与公众号对比）
+
+| 平台 | 审查严格度 | 政治/时政内容 | 建议 |
+|------|----------|-------------|------|
+| 小红书 | 🟡 较宽松 | 图文信息流不触发关键词审查，轻度时政可发 | 适合信息图传播，数据可视化类时政内容 |
+| 公众号 | 🔴 严格 | 严禁政治叙事、中美博弈、「卡脖子」等框架 | 只发纯商业/技术选题 |
+
+> 💡 **分工策略**：同一批新闻素材，硬核时政/博弈类走小红书信息图，安全商业分析走公众号。两篇定位互补：小红书打传播，公众号打深度。
 
 | 问题 | 处理方式 |
 |-----|---------|
@@ -706,7 +770,7 @@ echo "本地文件：/tmp/xhs-${SLUG}/"
 | 飞书 `unsafe file path` | **`--file` 必须用相对路径**（`./card1.png`），先 `cd` 到图片目录 |
 | 飞书 bot 创建后文档打不开 | 用 5.4 节流程为用户授权 `full_access`（见 references/feishu-permission-flow.md） |
 | 飞书权限 API 返回 99992402 | `type` 字段应为 `"user"`（不是 `"docx"`），详见 references/feishu-permission-flow.md |
-| 飞书上传失败 | 检查文件路径和大小，PNG 单张通常 500KB-2MB |
+| 飞书上传失败 | 检查文件路径和大小，PNG 单张通常 60-200KB（纯 CSS 卡片），含位图素材的卡片可能达 500KB-2MB |
 | chrome-in-chrome 登录态失效 | 提示用户重新登录飞书后再操作 |
 | Playwright 只检测到部分卡片 | HTML 注释中可能包含 `--` 序列破坏了 DOM。修复：`sed -i '' '/<!-- ═══/d' cards.html` 删除所有含特殊字符的注释行，然后重跑截图 |
 
@@ -726,6 +790,19 @@ echo "本地文件：/tmp/xhs-${SLUG}/"
 - [ ] 飞书上传：图片数量与文案图号一致，**所有 --file 参数均为相对路径**
 - [ ] 飞书权限：Bot 创建后已为用户授权 full_access（5.4 节）
 - [ ] 返回给用户：飞书文档 URL + 本地文件路径 + 共 N 张图
+
+---
+
+## 与公众号的双平台互补策略
+
+小红书审核尺度比公众号宽松。当选题涉及中美科技/芯片/地缘时：
+
+| 平台 | 策略 | 说明 |
+|------|------|------|
+| 小红书 | 可发信息图/行业对比 | 图文信息流不触发关键词审查 |
+| 公众号 | 必须转写为纯商业/纯技术角度 | 见 `wechat-article-writer` 安全红线 |
+
+> 💡 **核心原则**：高热度但微敏感选题 → 小红书信息图打传播，公众号转安全角度打深度。两篇互补，不浪费任何选题。
 
 ---
 
